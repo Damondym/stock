@@ -382,7 +382,7 @@ def get_stock_var7(date):
 
 ts.set_token('d9aaf0a623896f9803e5724b0a9c37d28f471453c3ecab0c6bd69abc')
 pro = ts.pro_api()
-date = '20200303'
+date = '20200304'
 #分析板块并获取趋势图
 #get_bankuai_all_data()
 #get_bankuai_low_plt(0.2)
@@ -394,7 +394,7 @@ date = '20200303'
 #获取自选股的趋势
 get_stock_all_data(date)
 get_stock_status_csv()
-get_stock_plot(120)
+#get_stock_plot(120)
 #从行业龙头里寻找低点股
 #get_stock_var7(date)
 #get_status('20200115')
