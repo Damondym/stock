@@ -303,6 +303,8 @@ def get_bankuai_status_csv():
     fileList = os.listdir(dir)
     with open("bankuai_status.csv", 'w', newline='') as f:
         writer = csv.writer(f)
+        writer.writerow(['name','var1[0]','var1[1]','var1[2]','var7[0]','var7[1]','var7[2]',
+                         'amount[0]','amount[1]','amount[2]','per[0]','per[1]','per[2]','avg_per'])
         for name in fileList:
             print(name)
             high, low, price, amount,vol = get_data_csv(name)
@@ -382,7 +384,7 @@ def get_stock_var7(date):
 
 ts.set_token('d9aaf0a623896f9803e5724b0a9c37d28f471453c3ecab0c6bd69abc')
 pro = ts.pro_api()
-date = '20200304'
+date = '20200305'
 #分析板块并获取趋势图
 #get_bankuai_all_data()
 #get_bankuai_low_plt(0.2)
