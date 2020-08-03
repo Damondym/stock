@@ -384,7 +384,7 @@ def get_stock_var7(date):
 
 ts.set_token('d9aaf0a623896f9803e5724b0a9c37d28f471453c3ecab0c6bd69abc')
 pro = ts.pro_api()
-date = '20200310'
+date = '20200316'
 #分析板块并获取趋势图
 #get_bankuai_all_data()
 #get_bankuai_low_plt(0.2)

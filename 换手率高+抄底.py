@@ -298,7 +298,7 @@ def get_dirction(date):
 if __name__ == '__main__':
     ts.set_token('d9aaf0a623896f9803e5724b0a9c37d28f471453c3ecab0c6bd69abc')
     pro = ts.pro_api()
-    date = '20200310'
+    date = '20200316'
 
     #choose_stock(15,'20200110')
     get_dirction(date)
