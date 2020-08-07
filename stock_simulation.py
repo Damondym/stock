@@ -1,6 +1,5 @@
 import requests
 import json
-import demjson
 import numpy as np
 from matplotlib import pyplot
 import matplotlib.pyplot as plt
@@ -293,14 +292,14 @@ if __name__ == '__main__':
     ts.set_token('d9aaf0a623896f9803e5724b0a9c37d28f471453c3ecab0c6bd69abc')
     pro = ts.pro_api()
     #get_all_ttm('20110101','20200110')
-    hs300 = pro.index_daily(ts_code='000300.SH', start_date='20150101', end_date='20200110').sort_values(
+    hs300 = pro.index_daily(ts_code='000300.SH', start_date='20180101', end_date='20200110').sort_values(
         by="trade_date", ascending=True)
     hsDate = hs300['trade_date'].tolist()
     money = 1000000
     dir = 'stock_data'
     fileList = os.listdir(dir)
     stockList = []
-    beginList = [20150101] * len(fileList)
+    beginList = [20180101] * len(fileList)
     endList = [20200110] * len(fileList)
     checkList = [len(hsDate)] * len(fileList)
     args_zip = list(zip(fileList, beginList, endList,checkList))

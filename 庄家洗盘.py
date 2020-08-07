@@ -9,7 +9,7 @@ def get_data(code,endtime,type = ''):
         df = ts.pro_bar(ts_code=code, adj='qfq', start_date='20190101', end_date=endtime).sort_values(
             by="trade_date", ascending=True)
     elif type == 'zs':
-        df = pro.index_daily(ts_code=code, start_date='20190101', end_date=endtime).sort_values(
+        df = ts.pro.index_daily(ts_code=code, start_date='20190101', end_date=endtime).sort_values(
             by="trade_date", ascending=True)
     high = df['high'].tolist()
     low = df['low'].tolist()
@@ -46,9 +46,9 @@ def ema(c, N):
 #%% get data
 
 lg = bs.login()
-rs = bs.query_history_k_data_plus("sz.000001",
-    "date,code,open,high,low,close,tradestatus",
-    start_date='2018-06-01', end_date='2020-07-24',
+rs = bs.query_history_k_data_plus("sh.601360",
+    "date,code,open,high,low,close,tradestatus,peTTM",
+    start_date='2018-01-01', end_date='2020-08-06',
     frequency="d", adjustflag="2")
 data_list = []
 while (rs.error_code == '0') & rs.next():
@@ -69,6 +69,7 @@ result['open'] = result['open'].astype(float)
 result['close'] = result['close'].astype(float)
 result['high'] = result['high'].astype(float)
 result['low+open+close+high'] = (result['low'] + result['open'] + result['close'] + result['high'])/4
+peTTM = result['peTTM'].astype(float).tolist()
 low = result['low']
 var1B = np.array(result['low+open+close+high'][:-1])#长度-1
 '''

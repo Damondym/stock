@@ -17,7 +17,7 @@ class Stock:
     i = 0
     price = []
     date = []
-    var1 = []
+    byebye = []
     host = []
     ttm = []
     tradeStatus = []
@@ -25,12 +25,12 @@ class Stock:
     if50 = 0
     ifsale = 0
     ifbuy = 1
-    def __init__(self,code,date,price,host,var1,ttm,tradeStatus):
+    def __init__(self,code,date,price,host,byebye,ttm,tradeStatus):
         self.code = code
         self.price = price
         self.date = date
         self.host = host
-        self.var1 = var1
+        self.byebye = byebye
         self.ttm = np.array(ttm)
         self.tradeStatus = tradeStatus
 
@@ -64,18 +64,8 @@ class Customer:
         return
 
     def sale(self, code, price, ttm, times = 1):
-        if times == 1:
-            score = 0.5 + (ttm - 0.45) * 2 / 7
-            num = (self.buyNum[code] * score + 0.5) // 1
-            self.sale_log[code] = {'price': price, 'num': num}
-        elif times == 2:
-            score = 0.3 + (ttm - 0.45) * 2 / 7
-            num = (self.buyNum[code] * score + 0.5) // 1
-            self.sale_log[code] = {'price': price, 'num': num}
-        elif times == 3:
-            score = 0.3 + (ttm - 0.45) * 4 / 7
-            num = (self.buyNum[code] * score + 0.5) // 1
-            self.sale_log[code] = {'price': price, 'num': num}
+        num = self.buyNum[code] * times
+        self.sale_log[code] = {'price': price, 'num': num}
         return
 
     def if_num(self,code):
@@ -99,7 +89,6 @@ class Customer:
             self.buyNum[sale] -= self.sale_log[sale]['num']
         #买
         if sum(self.buy_log.values()) * 200 > self.account:
-            print(times)
             for buy in self.buy_log:
                 self.account -= 100 * self.buy_log[buy]
                 if buy not in self.buyNum:
@@ -108,7 +97,7 @@ class Customer:
                     self.buyNum[buy] += 1
         else:
             score_sum = sum(self.score_log.values())
-            account_sum = self.sum / 2.5 * (1 - (ttm_avg-0.45) * 10 / 7)
+            account_sum = self.sum / 11
             #self.buy_log = sorted(self.buy_log.items(), key=lambda item: item[1]['ttm'])
             for buy in self.buy_log:
                 num = (self.score_log[buy] / score_sum * account_sum / self.buy_log[buy] + 50) // 100
@@ -194,6 +183,12 @@ def count_playyou(open,high,low,close,date):
     index_comein[index_comein < 0] = 0
     return index_comein
 
+def count_byebye(high,low,close):
+    var2 = llv(low, 10)
+    var3 = hhv(high, 25)
+    power = ema((np.array(close[25:]) - np.array(var2[15:])) / (np.array(var3) - np.array(var2[15:])) * 4, 4)
+    return power
+
 def get_data_csv(name,begin,end):
     df = pd.read_csv("stock_data/" + str(name))
     df = df.sort_values(by="date", ascending=True)
@@ -237,14 +232,15 @@ def get_all_data(begin, end):
 def get_stockList(name,begin,end):
     open, high, low, close, amount, vol, date, ttm, tradeStatus = get_data_csv(name, begin, end)
     host = count_playyou(open,high,low,close,date)
-    var1, var7 = count_readyup(high, low, close)
+    byebye = count_byebye(high,low,close)
+    #var1, var7 = count_readyup(high, low, close)
     if len(ttm) < 1278:
         return
-    stock = Stock(name, date[-494+34:], close[-494+34:], host[-494+34:], var1[-494+34:], ttm[-494+34-750:], tradeStatus[-494+34:])#ttm[-1 * (check + 749):])
+    stock = Stock(name, date[-494+34:], close[-494+34:], host[-494+34:], byebye[-494+34:], ttm[-494+34-750:], tradeStatus[-494+34:])
     return stock
 
 if __name__ == '__main__':
-    #get_all_data('2011-01-01','2020-01-10')
+    get_all_data('2011-01-01','2020-01-10')
     ts.set_token('d9aaf0a623896f9803e5724b0a9c37d28f471453c3ecab0c6bd69abc')
     pro = ts.pro_api()
     hs300 = pro.index_daily(ts_code='000300.SH', start_date='20180101', end_date='20200110').sort_values(
@@ -282,8 +278,10 @@ if __name__ == '__main__':
     price_log = []
     buyNum_log = []
     saleNum_log = []
+    buy_log = []
     print('begin! numbers is ' + str(len(stockList)))
     for i in range(len(hsDate)-34):
+        buy_log.append(0)
         ttm_avg = 0
         price_avg = 0
         for stock in stockList:
@@ -294,23 +292,30 @@ if __name__ == '__main__':
             price_avg += stock.price[stock.i]
             a.price_log[stock.code] = stock.price[stock.i]
             if stock.tradeStatus[stock.i] == 0:
-                continue
-            var = stock.var1[stock.i]
-            if stock.ifsale:
-                stock.ifsale = 0
-                a.sale(stock.code, stock.price[stock.i], ttm_percent, 2)
                 stock.next()
                 continue
-            elif stock.host[stock.i] == 0 and stock.status == 0:
+            bye = stock.byebye[stock.i]
+            if stock.ifsale:
+                if bye >= 3.5:
+                    a.sale(stock.code, stock.price[stock.i], ttm_percent, 0.5)
+                    stock.next()
+                    continue
+                elif bye >= 3.2 and bye < 3.5:
+                    stock.next()
+                    continue
+                elif bye < 3.2:
+                    stock.ifsale = 0
+                    a.sale(stock.code, stock.price[stock.i], ttm_percent, 1)
+                    stock.next()
+                    continue
+            elif stock.host[stock.i] == 0 and stock.host[stock.i - 1] != 0:
                 stock.status = 1
-                base = -0.5
+                base = 0
                 a.buy(stock.code, stock.price[stock.i], ttm_percent, base)
-            elif var > 90 and a.if_num(stock.code):
-                stock.status = 0
-                stock.if50 = 0
+                buy_log[i] += 1
+            elif bye >= 3.2 and a.if_num(stock.code):
                 stock.ifsale = 1
-                stock.ifbuy = 0
-                a.sale(stock.code, stock.price[stock.i], ttm_percent, 1)
+                a.sale(stock.code, stock.price[stock.i], ttm_percent, 0.2)
             '''if stock.ifsale:
                 stock.ifsale = 0
                 a.sale(stock.code, stock.price[stock.i], ttm_percent, 2)
@@ -335,77 +340,35 @@ if __name__ == '__main__':
         price_log.append(price_avg/len(stockList))
         buyNum_log.append(bn)
         saleNum_log.append(sn)
-    '''
-    for i,var in enumerate(stock.var1):
-        temp = stock.ttm[i: i + 750].copy()
-        temp[temp < temp[-1]] = -1
-        ttm_log.append(np.sum(temp == -1) / len(temp))
-        if stock.ifsale:
-            stock.ifsale = 0
-            a.get_sum(stock.price[i + 5])
-            account_log.append(a.account)
-            num_log.append(a.buyNum)
-            sum_log.append(a.sum)
-            continue
-        if var < 6.3 and stock.status == 0:
-            stock.status = 1
-            temp = stock.ttm[i: i + 750].copy()
-            temp[temp < temp[-1]] = -1
-            ttm_percent = 0.5 - (np.sum(temp == -1) / len(temp))
-            a.buy(stock.date[i+5],stock.price[i+5],2-ttm_percent*2)
-        elif var > 90 and a.if_num():
-            stock.status = 0
-            stock.if50 = 0
-            stock.ifsale = 1
-            stock.ifbuy = 0
-            a.sale(stock.date[i+5], stock.price[i+5], 2)
-            a.sale(stock.date[i+6], stock.price[i+6], 2)
-        elif var > 50 and stock.status ==1 and stock.if50 == 0:
-            stock.if50 = 1
-        elif var < 50 and stock.status ==1 and stock.if50 == 1:
-            stock.if50 = 2
-            a.sale(stock.date[i+5],stock.price[i+5],3)
-        elif var<20 and stock.status == 0 and stock.ifbuy == 0:
-            stock.ifbuy = 1
-            temp = stock.ttm[i: i + 750].copy()
-            temp[temp < temp[-1]] = -1
-            ttm_percent = 0.5 - (np.sum(temp == -1) / len(temp))
-            a.buy(stock.date[i + 5], stock.price[i+5],3-ttm_percent*2)
-        elif var < 6.3 and stock.status == 1 and stock.if50 == 2:
-            stock.if50 = 0
-            stock.ifbuy = 1
-            temp = stock.ttm[i: i + 750].copy()
-            temp[temp < temp[-1]] = -1
-            ttm_percent = 0.5 - (np.sum(temp == -1) / len(temp))
-            a.buy(stock.date[i + 5], stock.price[i + 5], 3 - ttm_percent * 2)
-        a.get_sum(stock.price[i+5])
-        account_log.append(a.account)
-        num_log.append(a.buyNum)
-        sum_log.append(a.sum)
-    '''
+
+    print(sorted(a.buyNum.items(),key=lambda x:x[1],reverse=True))
 
     print(a.account)
     print(a.buyNum)
     print(a.sum)
     print(a.get_log())
     x = range(len(account_log))
-    plt.plot(x, ttm_log, marker='o', mec='r', mfc='w', label='ttm_log')
+    '''plt.plot(x, ttm_log, marker='o', mec='r', mfc='w', label='ttm_log')
     plt.grid(axis="x")
     plt.legend(loc='upper left')  # 让图例生效
-    plt.show()
+    plt.show()'''
     plt.plot(x, account_log, marker='o', mec='r', mfc='w', label='account')
     plt.grid(axis="x")
     plt.legend(loc='upper left')  # 让图例生效
     plt.show()
-    plt.plot(x, buyNum_log, marker='*', ms=10, label='buy_num')
+    '''plt.plot(x, buyNum_log, marker='*', ms=10, label='buy_num')
     plt.plot(x, saleNum_log, marker='o', mec='r', mfc='w', label='sale_num')
     plt.grid(axis="x")
     plt.legend(loc='upper left')  # 让图例生效
-    plt.show()
-    plt.plot(x, sum_log, marker='*', ms=10, label='sum')
+    plt.show()'''
+    '''plt.plot(x, sum_log, marker='*', ms=10, label='sum')
     plt.grid(axis="x")
     plt.legend(loc='upper left')  # 让图例生效
-    plt.show()
+    plt.show()'''
+    '''plt.plot(x, buy_log, marker='*', ms=10, label='buytimes')
+    plt.grid(axis="x")
+    plt.legend(loc='upper left')  # 让图例生效
+    plt.show()'''
 
 
     hs300 = np.array(hs300['close'].tolist()[34:])
